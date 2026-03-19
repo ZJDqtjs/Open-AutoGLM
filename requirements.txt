@@ -1,6 +1,10 @@
 Pillow>=12.0.0
 openai>=2.9.0
 
+# For API Server
+fastapi>=0.110.0
+uvicorn>=0.27.0
+
 # For iOS Support
 requests>=2.31.0
 

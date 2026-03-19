@@ -6,10 +6,7 @@
 <img src=resources/logo.svg width="20%"/>
 </div>
 <p align="center">
-    👋 Join our<a href="resources/WECHAT.md" target="_blank"> Wechat</a> or <a href="https://discord.gg/HvT5BaPg3H" target="_blank">Discord</a> community.
-</p>
-<p align="center">
-    👋 Follow AutoGLM Autotyper <a href="https://x.com/Autotyper_Agent?s=20" target="_blank">X</a> account
+    👋 Join our <a href="resources/WECHAT.md" target="_blank">WeChat</a> or <a href="https://discord.gg/QR7SARHRxK" target="_blank">Discord</a> communities
 </p>
 
 ## Quick Start
@@ -24,6 +21,60 @@ https://raw.githubusercontent.com/zai-org/Open-AutoGLM/refs/heads/main/README_en
 ## Project Introduction
 
 Phone Agent is a mobile intelligent assistant framework built on AutoGLM. It understands phone screen content in a multimodal manner and helps users complete tasks through automated operations. The system controls devices via ADB (Android Debug Bridge), perceives screens using vision-language models, and generates and executes operation workflows through intelligent planning. Users simply describe their needs in natural language, such as "Open eBay and search for wireless earphones." and Phone Agent will automatically parse the intent, understand the current interface, plan the next action, and complete the entire workflow. The system also includes a sensitive operation confirmation mechanism and supports manual takeover during login or verification code scenarios. Additionally, it provides remote ADB debugging capabilities, allowing device connection via WiFi or network for flexible remote control and development.
+
+## Fork Changes (Shizuku Local Execution)
+
+This fork moves ADB execution from backend to app side and uses a cloud-plan + local-execute architecture:
+
+- Backend `api_server.py` only performs multimodal planning and returns `command_packet`
+- App side (for example Flutter) executes `command_packet.execution.commands` via Shizuku
+- Backend no longer executes ADB commands directly
+
+The unified server now keeps only local execution endpoints:
+
+- `GET /health`
+- `POST /v1/local/next`
+- `POST /v1/local/reset`
+
+### Start API Server
+
+Option 1 (recommended, with uvicorn):
+
+```bash
+uvicorn api_server:app --host 0.0.0.0 --port 8002
+```
+
+Option 2 (run the Python file directly):
+
+```bash
+python api_server.py
+```
+
+Note: running `api_server.py` directly starts the service with built-in defaults (`host=0.0.0.0`, `port=8002`).
+
+### Backend Config
+
+Model settings are fixed in `local_api_config.json`:
+
+```json
+{
+  "base_url": "https://open.bigmodel.cn/api/paas/v4",
+  "model": "autoglm-phone",
+  "api_key": "your-api-key",
+  "lang": "en",
+  "max_steps": 100
+}
+```
+
+### Runtime Flow
+
+1. Frontend captures screenshot/state and calls `POST /v1/local/next` with `task` for the first step.
+2. Backend returns a `command_packet`.
+3. Frontend executes commands via Shizuku and sends `previous_step_result`.
+4. Repeat `POST /v1/local/next` with `session_id` until `finished=true`.
+5. Call `POST /v1/local/reset` if you want to end a session early.
+
+For full request/response fields and examples, see `docs/flutter_shizuku_integration.md`.
 
 > ⚠️ This project is for research and learning purposes only. It is strictly prohibited to use for illegal information acquisition, system interference, or any illegal activities. Please carefully review the [Terms of Use](resources/privacy_policy_en.txt).
 

@@ -1,0 +1,7 @@
+{
+  "base_url": "https://open.bigmodel.cn/api/paas/v4",
+  "model": "autoglm-phone",
+  "api_key": "你的key",
+  "lang": "cn",
+  "max_steps": 100
+}

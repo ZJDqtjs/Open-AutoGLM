@@ -2,6 +2,61 @@
 
 [Readme in English](README_en.md)
 
+## Fork 改动说明（Shizuku 本地执行）
+
+这个 Fork 将原本由后端直接执行 ADB 的链路，改成了“云端只规划，应用端本地执行”：
+
+- 后端 `api_server.py` 只负责多模态理解与动作规划，返回 `command_packet`
+- 应用端（如 Flutter）通过 Shizuku 执行 `command_packet.execution.commands`
+- 后端不再直接连接手机执行 ADB 命令，便于端云解耦和移动端集成
+
+当前服务端只保留本地执行模式接口：
+
+- `GET /health`
+- `POST /v1/local/next`
+- `POST /v1/local/reset`
+
+### 启动 API 服务
+
+方式 1（推荐，使用 uvicorn）：
+
+```bash
+uvicorn api_server:app --host 0.0.0.0 --port 8002
+```
+
+方式 2（直接运行 Python 文件）：
+
+```bash
+python api_server.py
+```
+
+说明：直接运行 `api_server.py` 时，服务会使用内置默认配置启动（`host=0.0.0.0`，`port=8002`）。
+
+### 后端配置
+
+后端模型配置固定写在 `local_api_config.json`：
+
+```json
+{
+  "base_url": "https://open.bigmodel.cn/api/paas/v4",
+  "model": "autoglm-phone",
+  "api_key": "your-api-key",
+  "lang": "cn",
+  "max_steps": 100
+}
+```
+### 以下为项目原README
+
+### 使用流程（端云协同）
+
+1. 前端采集截图与状态，首次调用 `POST /v1/local/next`（携带 `task`）
+2. 后端返回 `command_packet`
+3. 前端用 Shizuku 在本机执行命令，并回传 `previous_step_result`
+4. 循环调用 `POST /v1/local/next`（携带 `session_id`）直到 `finished=true`
+5. 如需提前结束会话，调用 `POST /v1/local/reset`
+
+完整字段与示例请看：`docs/flutter_shizuku_integration.md`
+
 <div align="center">
 <img src=resources/logo.svg width="20%"/>
 </div>
@@ -9,12 +64,9 @@
     👋 加入我们的 <a href="resources/WECHAT.md" target="_blank">微信</a> 社区
 </p>
 <p align="center">
-    👋 关注智谱 AI 输入法 <a href="https://x.com/Autotyper_Agent?s=20" target="_blank">X</a> 账号
-</p>
-<p align="center">
     🎤 进一步在我们的产品 <a href="https://autoglm.zhipuai.cn/autotyper/" target="_blank">智谱 AI 输入法</a> 体验“用嘴发指令”
-</p>
-<p align="center">
+</p
+><p align="center">
     <a href="https://mp.weixin.qq.com/s/wRp22dmRVF23ySEiATiWIQ" target="_blank">AutoGLM 实战派</a> 开发者激励活动火热进行中，跑通、二创即可瓜分数万元现金奖池！成果提交 👉 <a href="https://zhipu-ai.feishu.cn/share/base/form/shrcnE3ZuPD5tlOyVJ7d5Wtir8c?from=navigation" target="_blank">入口</a>
 </p>
 

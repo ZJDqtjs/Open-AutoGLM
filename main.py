@@ -35,7 +35,7 @@ from phone_agent.xctest import list_devices as list_ios_devices
 
 
 def check_system_requirements(
-    device_type: DeviceType = DeviceType.ADB, wda_url: str = "http://localhost:8100"
+    device_type: DeviceType = DeviceType.ADB, wda_url: str = "http://localhost:8100",args=None
 ) -> bool:
     """
     Check system requirements before running the agent.
@@ -196,7 +196,7 @@ def check_system_requirements(
         print("3. Checking ADB Keyboard...", end=" ")
         try:
             result = subprocess.run(
-                ["adb", "shell", "ime", "list", "-s"],
+                ["adb", "-s",args.device_id,"shell", "ime", "list", "-s"],
                 capture_output=True,
                 text=True,
                 timeout=10,
@@ -737,6 +737,7 @@ def main():
         wda_url=args.wda_url
         if device_type == DeviceType.IOS
         else "http://localhost:8100",
+        args=args,
     ):
         sys.exit(1)
 
